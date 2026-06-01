@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Minimal solver module for matrix completion experiments.
+"""Численные методы для экспериментов по восстановлению матриц.
 
-This file contains only the reusable numerical pieces that are needed by
-`synthetic_api.py`. It intentionally avoids the old benchmark / CLI layer.
+В файле оставлены только переиспользуемые алгоритмы, которые нужны основному
+API. Старые benchmark-скрипты и CLI-слой сюда намеренно не входят.
 """
 
 from __future__ import annotations

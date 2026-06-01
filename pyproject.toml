@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "matrix-completion-research"
 version = "0.1.0"
-description = "Research tools for synthetic matrix completion experiments with Riemannian low-rank solvers."
+description = "Синтетические эксперименты по восстановлению матриц малого ранга."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

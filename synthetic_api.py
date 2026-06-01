@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Stage-oriented API for synthetic matrix completion experiments.
+"""Основной API для синтетических экспериментов по matrix completion.
 
-This module is intentionally organized as a constructor for experiments rather
-than a CLI benchmark. The notebook is expected to import these functions
-directly and combine them in flexible Python loops.
+Модуль устроен как набор небольших конструкторов: сценарий, маска пропусков,
+наблюдения, методы, метрики и графики. Такой формат удобнее для ноутбука и
+исследовательских запусков, чем отдельный CLI-бенчмарк.
 
-Core idea:
-    matrix generation -> structure transform -> missingness field ->
-    observed mask -> split -> noisy observations -> methods -> metrics
+Общая схема:
+    матрица -> структура -> поле пропусков -> маска наблюдений ->
+    train/validation/test -> шум -> методы -> метрики
 """
 
 from __future__ import annotations
@@ -203,7 +203,7 @@ def _require_fraction(name: str, value: float) -> None:
 
 
 def validate_scenario_config(config: ScenarioConfig) -> None:
-    """Fail fast on invalid scenario settings before numerical work starts."""
+    """Проверяет настройки сценария до запуска численных методов."""
     _require_positive_int("matrix.m", config.matrix.m)
     _require_positive_int("matrix.n", config.matrix.n)
     _require_positive_int("matrix.rank", config.matrix.rank)
@@ -537,7 +537,7 @@ def sample_observed_mask(
         scores = -scores
 
     if config.exact_fraction:
-        order = np.argsort(scores)  # low score -> likely observed
+        order = np.argsort(scores)  # малые значения чаще попадают в наблюдения
         observed = np.zeros(total, dtype=bool)
         observed[order[:observed_count]] = True
         return observed.reshape(missingness_field.shape)

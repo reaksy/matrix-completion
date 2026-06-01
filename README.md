@@ -1,27 +1,43 @@
-# Matrix Completion Research
+# Восстановление матриц малого ранга
 
-Research code for synthetic matrix completion experiments with ALS, Soft-Impute,
-vanilla Riemannian gradient descent, regularized RGD, and compact RGD.
+Проект содержит компактную библиотеку для синтетических экспериментов по задаче
+восстановления матриц по частичным наблюдениям. Основная цель — сравнить
+классические и римановы методы восстановления матриц малого ранга при разных
+рангах, уровнях шума и структурах пропусков.
 
-The current project focuses on controlled experiments: rank sweeps, noise sweeps,
-missingness patterns, runtime, iteration counts, and reconstruction quality.
+## Что реализовано
 
-## Quick Start
+- генерация синтетических матриц малого ранга;
+- случайные, блочные и полосовые пропуски;
+- разбиение наблюдений на обучающую, валидационную и тестовую части;
+- ALS, Soft-Impute, риманов градиентный спуск и его версия с L2-регуляризацией;
+- компактная версия риманова градиентного спуска;
+- однофакторные эксперименты: меняется только ранг, только шум или только тип пропусков;
+- сводные метрики, графики, сохранение конфигураций и результатов.
+
+## Структура проекта
+
+- `matrix_completion_methods.py` — численные методы восстановления.
+- `synthetic_api.py` — генерация сценариев, запуск методов, метрики и графики.
+- `synthetic_research_api.py` — слой для исследований: пресеты, однофакторные эксперименты и наборы экспериментов.
+- `synthetic_research_test_panel.ipynb` — основной ноутбук для запуска и визуального анализа.
+- `research_configs/` — сохраненные сценарии и наборы экспериментов.
+- `tests/` — минимальные проверки корректности API.
+
+## Быстрый запуск
 
 ```bash
 python -m pip install -e ".[dev,notebook]"
 python -m pytest
 ```
 
-## Main Files
+## Принцип экспериментов
 
-- `matrix_completion_methods.py` contains reusable numerical solvers.
-- `synthetic_api.py` builds scenarios, runs methods, computes metrics, and plots results.
-- `synthetic_research_api.py` provides one-factor experiments and experiment suites.
-- `synthetic_research_test_panel.ipynb` is the current notebook entry point.
+Базовый сценарий фиксирует размер матрицы, истинный ранг, шум и тип пропусков.
+Дальше запускаются однофакторные исследования: в каждом эксперименте меняется
+только один параметр, поэтому графики проще интерпретировать и сравнивать.
+Если значения не заданы вручную, API строит разумную сетку автоматически:
+малые ранги проверяются подряд, а дальше шаг постепенно растет.
 
-## GitHub Hygiene
-
-Generated outputs, PDFs, notebook caches, virtual environments, and legacy result
-tables are ignored by default. Keep source code, config JSON, and small docs in
-git; regenerate heavy artifacts locally when needed.
+Тяжелые результаты, PDF, изображения, временные таблицы и выполненные outputs
+ноутбука не хранятся в репозитории. Их можно заново получить локальным запуском.

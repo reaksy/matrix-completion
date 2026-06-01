@@ -60,3 +60,13 @@ def test_suite_resolves_default_rank_values_from_base_scenario() -> None:
     resolved = suite.resolved_experiments(".")[0]
 
     assert resolved.values == [1, 2, 3, 4, 5, 8, 10]
+
+
+def test_default_rank_grid_is_capped_for_large_matrices() -> None:
+    config = api.ScenarioConfig(matrix=api.MatrixConfig(m=1000, n=1000, rank=3))
+
+    values = research.default_rank_values(config)
+
+    assert values[:5] == [1, 2, 3, 4, 5]
+    assert values[-1] == 100
+    assert len(values) < 20

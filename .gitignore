@@ -61,9 +61,14 @@ synthetic_control_panel.ipynb
 synthetic_study_api.py
 synthetic_study_panel.ipynb
 study_configs/
+research_configs/studies/
 synthetic_outputs/
 study_outputs/
 research_outputs/
 legacy_results/
 
 hft_recovery_topic_memo.*
+
+GITHUB_SETUP.md
+README_synthetic_api.md
+docs/synthetic_api_documentation.txt
