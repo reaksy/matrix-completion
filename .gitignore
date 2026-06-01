@@ -8,6 +8,10 @@ venv/
 env/
 .vscode/
 
+*.tex
+*.sty
+*.bib
+
 .ipynb_checkpoints/
 .pytest_cache/
 .ruff_cache/
@@ -41,6 +45,22 @@ missfont.log
 arXiv-1504.05477v4/
 arXiv-1504.05477v4_ru/
 legacy/
+progress2/
+beginning.tex
+final-text.tex
+first_pred.tex
+pred-text*.tex
+riemannian_manifold_notes.tex
+theory_reworked.tex
+prepare_course_tables.py
+translate_tex_folder_to_russian.py
+synthetic_api_guide.txt
+synthetic_config_test_panel.ipynb
+synthetic_config_workflow.py
+synthetic_control_panel.ipynb
+synthetic_study_api.py
+synthetic_study_panel.ipynb
+study_configs/
 synthetic_outputs/
 study_outputs/
 research_outputs/

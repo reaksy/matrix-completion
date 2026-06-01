@@ -28,7 +28,6 @@ py-modules = [
     "matrix_completion_methods",
     "synthetic_api",
     "synthetic_research_api",
-    "synthetic_study_api",
 ]
 
 [tool.pytest.ini_options]

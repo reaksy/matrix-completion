@@ -22,7 +22,7 @@ jobs:
         run: python -m pip install -e ".[dev]"
 
       - name: Lint
-        run: python -m ruff check matrix_completion_methods.py synthetic_api.py synthetic_research_api.py synthetic_study_api.py tests
+        run: python -m ruff check matrix_completion_methods.py synthetic_api.py synthetic_research_api.py tests
 
       - name: Test
         run: python -m pytest
