@@ -1,0 +1,461 @@
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\usetheme{SimpleDarkBlue}
+
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{adjustbox}
+
+\title{Первичные эксперименты и развитие реализации}
+\subtitle{От ванильного RGD к регуляризации и компактной факторизации}
+\author{}
+\institute{НИУ ВШЭ}
+\date{}
+
+\begin{document}
+
+\begin{frame}{Vanilla RGD}
+\footnotesize
+\renewcommand{\arraystretch}{1.22}
+\begin{center}
+\begin{tabular}{@{}>{\raggedright\arraybackslash\bfseries}p{0.46\textwidth}p{0.48\textwidth}@{}}
+Минимизация функционала: &
+$\displaystyle \min_{X\in \mathcal M_r} f(X)$
+\\
+Функционал: &
+$\displaystyle f(X)=\frac12\lVert \mathcal P_{\Omega}(X-Y)\rVert_F^2$
+\\
+Оператор проекции: &
+$\displaystyle (\mathcal P_\Omega(Z))_{ij}=
+\begin{cases}
+Z_{ij}, & (i,j)\in\Omega,\\
+0, & (i,j)\notin\Omega
+\end{cases}$
+\\
+Многообразие матриц фиксированного ранга: &
+$\displaystyle \mathcal M_r = \{X\in\mathbb R^{m\times n}: \operatorname{rank}(X)=r\}$
+\\
+Евклидов градиент: &
+$\displaystyle \nabla f(X)=\mathcal P_{\Omega}(X-Y)$
+\\
+Риманов градиент: &
+$\displaystyle \operatorname{grad} f(X)=\operatorname{Proj}_{T_X\mathcal M_r}\bigl(\nabla f(X)\bigr)$
+\\
+Шаг метода: &
+$\displaystyle X_{k+1}=R_{X_k}\bigl(-\eta_k\,\operatorname{grad} f(X_k)\bigr)$
+\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}{Эксперименты с Vanilla RGD}
+\small
+\begin{columns}[T]
+\column{0.48\textwidth}
+\begin{block}{Первый эксперимент}
+\begin{itemize}
+\item матрица $60\times 60$
+\item истинный ранг $4$
+\item случайные пропуски
+\end{itemize}
+\end{block}
+
+\begin{block}{Сравнение}
+\begin{itemize}
+\item ALS
+\item Soft-Impute
+\item Vanilla RGD
+\end{itemize}
+\end{block}
+
+\column{0.48\textwidth}
+\begin{block}{Проверяем}
+\begin{itemize}
+\item точность восстановления
+\item скорость сходимости
+\item устойчивость к шуму
+\item ошибку в ранге
+\end{itemize}
+\end{block}
+
+\begin{block}{Идея}
+понять сильные и слабые стороны базовой реализации
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Vanilla RGD: усреднение по методам}
+\small
+\textbf{Проверяем:}
+\begin{itemize}
+\item точность восстановления
+\item время работы
+\item число итераций
+\end{itemize}
+
+\begin{center}
+\begin{adjustbox}{max totalsize={\textwidth}{0.56\textheight}}
+\begin{tabular}{lrrrr}
+\toprule
+Метод & $\overline{\mathrm{RMSE}}$ & $\overline{\text{Fro}}$ & $\overline{t}$, c & $\overline{N}_{\mathrm{iter}}$ \\
+\midrule
+ALS & 0.0725 & 0.7287 & 0.0791 & 48.9 \\
+Riemannian GD & 0.0454 & 0.4470 & 0.4407 & 195.6 \\
+Soft-Impute & 0.0423 & 0.4215 & 0.1460 & 110.2 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{center}
+
+\textbf{Вывод:}
+\begin{itemize}
+\item точность очень хорошая
+\item время заметно больше
+\item число итераций тоже больше
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Vanilla RGD: ошибка в ранге}
+\scriptsize
+\textbf{Проверяем:}
+\begin{itemize}
+\item что происходит, если ранг задан неправильно
+\end{itemize}
+
+\begin{center}
+\begin{adjustbox}{max totalsize={\textwidth}{0.58\textheight}}
+\begin{tabular}{llrr}
+\toprule
+case & Метод & $\overline{\mathrm{RMSE}}$ & $\overline{t}$, c \\
+\midrule
+correct & ALS & 0.0678 & 0.0775 \\
+correct & RGD & 0.0413 & 0.4451 \\
+correct & Soft-Impute & 0.0426 & 0.1451 \\
+\midrule
+over & ALS & 0.0723 & 0.1023 \\
+over & \textcolor{red}{RGD} & \textcolor{red}{0.0528} & 0.4889 \\
+over & Soft-Impute & 0.0428 & 0.1455 \\
+\midrule
+under & ALS & 0.0775 & 0.0576 \\
+under & \textcolor{orange}{RGD} & \textcolor{orange}{0.0422} & 0.3880 \\
+under & Soft-Impute & 0.0417 & 0.1474 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{center}
+
+\textbf{Вывод:}
+\begin{itemize}
+\item Vanilla RGD чувствителен к ошибке в ранге
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Vanilla RGD: шум}
+\scriptsize
+\textbf{Проверяем:}
+\begin{itemize}
+\item что происходит при увеличении шума
+\end{itemize}
+
+\begin{center}
+\begin{adjustbox}{max totalsize={\textwidth}{0.54\textheight}}
+\begin{tabular}{llrr}
+\toprule
+$\sigma$ & Метод & $\overline{\mathrm{RMSE}}$ & $\overline{t}$, c \\
+\midrule
+0.00 & ALS & 0.0421 & 0.0551 \\
+0.00 & RGD & 0.0279 & 0.4212 \\
+0.00 & Soft-Impute & 0.0371 & 0.1204 \\
+\midrule
+0.02 & ALS & 0.0607 & 0.0757 \\
+0.02 & RGD & 0.0370 & 0.4305 \\
+0.02 & Soft-Impute & 0.0391 & 0.1301 \\
+\midrule
+0.05 & ALS & 0.1148 & 0.1066 \\
+0.05 & \textcolor{red}{RGD} & \textcolor{red}{0.0714} & 0.4702 \\
+0.05 & \textcolor{green!50!black}{Soft-Impute} & \textcolor{green!50!black}{0.0508} & 0.1875 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{center}
+
+\textbf{Вывод:}
+\begin{itemize}
+\item Когда матрица шумная или ранг задан неправильно, ограничения fixed-rank manifold мешают хорошо приблизить матрицу.
+\end{itemize}
+
+\textbf{Идея:}
+\begin{itemize}
+\item добавить регуляризацию, как в Soft-Impute
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Regularized RGD}
+\footnotesize
+\renewcommand{\arraystretch}{1.22}
+\begin{center}
+\begin{tabular}{@{}>{\raggedright\arraybackslash\bfseries}p{0.46\textwidth}p{0.48\textwidth}@{}}
+Минимизация функционала: &
+$\displaystyle \min_{X\in \mathcal M_r} f_{\lambda}(X)$
+\\
+Функционал: &
+$\displaystyle f_{\lambda}(X)=\frac12\lVert \mathcal P_{\Omega}(X-Y)\rVert_F^2+\frac{\lambda}{2}\lVert X\rVert_F^2$
+\\
+Евклидов градиент: &
+$\displaystyle \nabla f_{\lambda}(X)=\mathcal P_{\Omega}(X-Y)+\lambda X$
+\\
+Риманов градиент: &
+$\displaystyle \operatorname{grad} f_{\lambda}(X)=\operatorname{Proj}_{T_X\mathcal M_r}\bigl(\nabla f_{\lambda}(X)\bigr)$
+\\
+Шаг метода: &
+$\displaystyle X_{k+1}=R_{X_k}\bigl(-\eta_k\,\operatorname{grad} f_{\lambda}(X_k)\bigr)$
+\\
+Параметр регуляризации: &
+$\displaystyle \lambda > 0$
+\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}{Regularized RGD: подбор $\lambda$}
+\scriptsize
+\textbf{Проверяем:}
+\begin{itemize}
+\item как выбор $\lambda$ влияет на точность, время и число итераций
+\end{itemize}
+
+\begin{center}
+\begin{adjustbox}{max totalsize={\textwidth}{0.52\textheight}}
+\begin{tabular}{rrrr}
+\toprule
+$\lambda$ & $\overline{\mathrm{RMSE}}$ & $\overline{t}$, c & $\overline{N}_{\mathrm{iter}}$ \\
+\midrule
+0.0001 & 0.0460 & 0.1292 & 192.2 \\
+0.0003 & 0.0457 & 0.1357 & 192.1 \\
+0.0010 & 0.0448 & 0.1355 & 191.8 \\
+0.0030 & 0.0429 & 0.1298 & 190.7 \\
+0.0100 & 0.0397 & 0.1291 & 187.7 \\
+\textcolor{green!50!black}{0.0300} & \textcolor{green!50!black}{0.0393} & \textcolor{green!50!black}{0.1172} & \textcolor{green!50!black}{182.1} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{center}
+
+\textbf{Вывод:}
+\begin{itemize}
+\item при усреднении по всем сценариям лучше всего работает $\lambda = 0.03$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Regularized RGD: шум и ошибка в ранге}
+\scriptsize
+\textbf{Проверяем:}
+\begin{itemize}
+\item как выбор $\lambda$ ведет себя при шуме и ошибке в ранге
+\end{itemize}
+
+\begin{columns}[T]
+\column{0.48\textwidth}
+\centering
+\textbf{шум}
+
+\vspace{0.05cm}
+\begin{adjustbox}{max totalsize={\linewidth}{0.34\textheight}}
+\begin{tabular}{lrrr}
+\toprule
+$\sigma$ & $\lambda=0.001$ & $\lambda=0.01$ & $\lambda=0.03$ \\
+\midrule
+0.00 & 0.0265 & \textcolor{green!50!black}{0.0258} & 0.0302 \\
+0.02 & 0.0398 & \textcolor{green!50!black}{0.0357} & 0.0361 \\
+0.05 & 0.0681 & 0.0578 & \textcolor{green!50!black}{0.0515} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+
+\column{0.48\textwidth}
+\centering
+\textbf{rank case}
+
+\vspace{0.05cm}
+\begin{adjustbox}{max totalsize={\linewidth}{0.34\textheight}}
+\begin{tabular}{lrrr}
+\toprule
+case & $\lambda=0.001$ & $\lambda=0.01$ & $\lambda=0.03$ \\
+\midrule
+correct & 0.0386 & \textcolor{green!50!black}{0.0339} & 0.0356 \\
+over & 0.0577 & 0.0505 & \textcolor{green!50!black}{0.0479} \\
+under & 0.0382 & 0.0348 & \textcolor{green!50!black}{0.0343} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{columns}
+
+\textbf{Вывод:}
+\begin{itemize}
+\item при сильном шуме и ошибке в ранге более сильная регуляризация работает устойчивее
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Regularized RGD: $\lambda = 0.03$}
+\scriptsize
+\textbf{Проверяем:}
+\begin{itemize}
+\item как regularized RGD с выбранным $\lambda$ выглядит на фоне других методов
+\end{itemize}
+
+\begin{center}
+\begin{adjustbox}{max totalsize={\textwidth}{0.50\textheight}}
+\begin{tabular}{lrrr}
+\toprule
+Метод & $\overline{\mathrm{RMSE}}$ & $\overline{t}$, c & $\overline{N}_{\mathrm{iter}}$ \\
+\midrule
+ALS & 0.0711 & 0.1015 & 50.0 \\
+Vanilla RGD & 0.0462 & 0.1559 & 192.3 \\
+Soft-Impute & 0.0415 & 0.1110 & 109.9 \\
+\textcolor{green!50!black}{RGD + $\lambda = 0.03$} & \textcolor{green!50!black}{0.0393} & 0.1172 & 182.1 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{center}
+
+\textbf{Вывод:}
+\begin{itemize}
+\item регуляризация улучшает точность по сравнению с Vanilla RGD и Soft-Impute
+\item дальше нужно решать проблему полной SVD на каждой итерации
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Compact RGD}
+\footnotesize
+\begin{center}
+\textbf{Bart Vandereycken}
+
+\vspace{0.08cm}
+\textit{Low-rank Matrix Completion by Riemannian Optimization}
+
+\vspace{0.08cm}
+SIAM Journal on Optimization, 23(2):1214--1236, 2013
+\end{center}
+
+\vspace{0.1cm}
+\renewcommand{\arraystretch}{1.25}
+\begin{center}
+\begin{tabular}{@{}>{\raggedright\arraybackslash\bfseries}p{0.34\textwidth}p{0.60\textwidth}@{}}
+Факторизация: &
+$\displaystyle X = U S V^{\top}$
+\\
+Касательное направление: &
+$\displaystyle \xi = U\, dS\, V^{\top} + U^{\perp} V^{\top} + U (V^{\perp})^{\top}$
+\\
+Ортогональность: &
+$\displaystyle U^{\top}U^{\perp} = 0,\qquad V^{\top}V^{\perp} = 0$
+\\
+QR-разложения: &
+$\displaystyle U^{\perp} = Q_U R_U,\qquad V^{\perp} = Q_V R_V$
+\\
+Сумма $X + \xi$: &
+$\displaystyle
+X + \xi =
+[U\;\;Q_U]
+\begin{bmatrix}
+S + dS & R_V^{\top} \\
+R_U & 0
+\end{bmatrix}
+[V\;\;Q_V]^{\top}$
+\\
+Ретракция: &
+$\displaystyle \text{SVD только ядра размера } \le 2r\times 2r$
+\end{tabular}
+\end{center}
+
+\textbf{Вывод:}
+\begin{itemize}
+\item шаг становится дешевле, чем в Vanilla RGD
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Compact RGD: по методам}
+\scriptsize
+\textbf{Проверяем:}
+\begin{itemize}
+\item сохранилась ли точность regularized RGD
+\item удалось ли ускорить метод
+\end{itemize}
+
+\begin{center}
+\begin{adjustbox}{max totalsize={\textwidth}{0.50\textheight}}
+\begin{tabular}{lrrr}
+\toprule
+Метод & $\overline{\mathrm{RMSE}}$ & $\overline{t}$, c & $\overline{N}_{\mathrm{iter}}$ \\
+\midrule
+ALS & 0.0720 & 0.1728 & 49.1 \\
+Vanilla RGD & 0.0462 & 0.1559 & 192.3 \\
+Soft-Impute & 0.0420 & 0.1211 & 110.3 \\
+Compact RGD & 0.0440 & 0.0786 & 194.6 \\
+\textcolor{green!50!black}{Compact RGD + reg} & \textcolor{green!50!black}{0.0395} & \textcolor{green!50!black}{0.0697} & \textcolor{green!50!black}{182.0} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{center}
+
+\textbf{Вывод:}
+\begin{itemize}
+\item Compact RGD + reg сохраняет точность regularized RGD
+\item время работы заметно меньше
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Compact RGD: шум и ошибка в ранге}
+\scriptsize
+\textbf{Проверяем:}
+\begin{itemize}
+\item остается ли улучшение при шуме и ошибке в ранге
+\end{itemize}
+
+\begin{columns}[T]
+\column{0.48\textwidth}
+\centering
+\textbf{шум}
+
+\vspace{0.05cm}
+\begin{adjustbox}{max totalsize={\linewidth}{0.28\textheight}}
+\begin{tabular}{lrrr}
+\toprule
+$\sigma$ & Vanilla RGD & Compact RGD & Compact RGD + reg \\
+\midrule
+0.00 & 0.0270 & 0.0376 & \textcolor{green!50!black}{0.0308} \\
+0.02 & 0.0412 & 0.0419 & \textcolor{green!50!black}{0.0365} \\
+0.05 & 0.0703 & 0.0626 & \textcolor{green!50!black}{0.0512} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+
+\column{0.48\textwidth}
+\centering
+\textbf{rank case}
+
+\vspace{0.05cm}
+\begin{adjustbox}{max totalsize={\linewidth}{0.28\textheight}}
+\begin{tabular}{lrrr}
+\toprule
+case & Vanilla RGD & Compact RGD & Compact RGD + reg \\
+\midrule
+correct & 0.0399 & 0.0372 & \textcolor{green!50!black}{0.0358} \\
+over & 0.0596 & 0.0539 & \textcolor{green!50!black}{0.0475} \\
+under & 0.0391 & 0.0409 & \textcolor{green!50!black}{0.0351} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{columns}
+
+\textbf{Вывод:}
+\begin{itemize}
+\item компактная версия сохраняет выигрыш regularized RGD
+\item ускорение достигается за счет SVD ядра размера не больше $2r\times 2r$
+\end{itemize}
+\end{frame}
+
+\end{document}

@@ -1,0 +1,290 @@
+{
+  "name": "manual_rank_study",
+  "description": "Исследование, собранное вручную из сценариев в коде.",
+  "tags": [],
+  "scenarios": [
+    {
+      "name": "base_60x60_rank4__rank_4",
+      "description": "Базовый сценарий 60x60, rank=4, случайные пропуски и слабый шум. | rank=4",
+      "tags": [
+        "base",
+        "rank4",
+        "rank_sweep",
+        "rank"
+      ],
+      "scenario": {
+        "matrix": {
+          "m": 60,
+          "n": 60,
+          "rank": 4,
+          "factor_distribution": "gaussian",
+          "singular_value_profile": "linear",
+          "singular_scale": 1.0,
+          "coherence_mode": "incoherent",
+          "coherence_strength": 0.9,
+          "sparse_additive_fraction": 0.0,
+          "sparse_additive_scale": 0.0
+        },
+        "structure": {
+          "mode": "none",
+          "strength": 0.0,
+          "secondary_strength": 0.0
+        },
+        "missingness_field": {
+          "mode": "random",
+          "concentration": 1.0,
+          "width": 0.15,
+          "row_index": null,
+          "col_index": null,
+          "value_dependence": 0.0
+        },
+        "mask_sampling": {
+          "observed_fraction": 0.35,
+          "exact_fraction": true,
+          "threshold": null,
+          "invert_scores": false
+        },
+        "split": {
+          "validation_fraction": 0.15,
+          "test_fraction": 0.15
+        },
+        "noise": {
+          "mode": "gaussian",
+          "std": 0.02,
+          "outlier_fraction": 0.0,
+          "outlier_scale": 0.0
+        }
+      }
+    },
+    {
+      "name": "base_60x60_rank4__rank_6",
+      "description": "Базовый сценарий 60x60, rank=4, случайные пропуски и слабый шум. | rank=6",
+      "tags": [
+        "base",
+        "rank4",
+        "rank_sweep",
+        "rank"
+      ],
+      "scenario": {
+        "matrix": {
+          "m": 60,
+          "n": 60,
+          "rank": 6,
+          "factor_distribution": "gaussian",
+          "singular_value_profile": "linear",
+          "singular_scale": 1.0,
+          "coherence_mode": "incoherent",
+          "coherence_strength": 0.9,
+          "sparse_additive_fraction": 0.0,
+          "sparse_additive_scale": 0.0
+        },
+        "structure": {
+          "mode": "none",
+          "strength": 0.0,
+          "secondary_strength": 0.0
+        },
+        "missingness_field": {
+          "mode": "random",
+          "concentration": 1.0,
+          "width": 0.15,
+          "row_index": null,
+          "col_index": null,
+          "value_dependence": 0.0
+        },
+        "mask_sampling": {
+          "observed_fraction": 0.35,
+          "exact_fraction": true,
+          "threshold": null,
+          "invert_scores": false
+        },
+        "split": {
+          "validation_fraction": 0.15,
+          "test_fraction": 0.15
+        },
+        "noise": {
+          "mode": "gaussian",
+          "std": 0.02,
+          "outlier_fraction": 0.0,
+          "outlier_scale": 0.0
+        }
+      }
+    },
+    {
+      "name": "base_60x60_rank4__rank_8",
+      "description": "Базовый сценарий 60x60, rank=4, случайные пропуски и слабый шум. | rank=8",
+      "tags": [
+        "base",
+        "rank4",
+        "rank_sweep",
+        "rank"
+      ],
+      "scenario": {
+        "matrix": {
+          "m": 60,
+          "n": 60,
+          "rank": 8,
+          "factor_distribution": "gaussian",
+          "singular_value_profile": "linear",
+          "singular_scale": 1.0,
+          "coherence_mode": "incoherent",
+          "coherence_strength": 0.9,
+          "sparse_additive_fraction": 0.0,
+          "sparse_additive_scale": 0.0
+        },
+        "structure": {
+          "mode": "none",
+          "strength": 0.0,
+          "secondary_strength": 0.0
+        },
+        "missingness_field": {
+          "mode": "random",
+          "concentration": 1.0,
+          "width": 0.15,
+          "row_index": null,
+          "col_index": null,
+          "value_dependence": 0.0
+        },
+        "mask_sampling": {
+          "observed_fraction": 0.35,
+          "exact_fraction": true,
+          "threshold": null,
+          "invert_scores": false
+        },
+        "split": {
+          "validation_fraction": 0.15,
+          "test_fraction": 0.15
+        },
+        "noise": {
+          "mode": "gaussian",
+          "std": 0.02,
+          "outlier_fraction": 0.0,
+          "outlier_scale": 0.0
+        }
+      }
+    },
+    {
+      "name": "base_60x60_rank4__rank_10",
+      "description": "Базовый сценарий 60x60, rank=4, случайные пропуски и слабый шум. | rank=10",
+      "tags": [
+        "base",
+        "rank4",
+        "rank_sweep",
+        "rank"
+      ],
+      "scenario": {
+        "matrix": {
+          "m": 60,
+          "n": 60,
+          "rank": 10,
+          "factor_distribution": "gaussian",
+          "singular_value_profile": "linear",
+          "singular_scale": 1.0,
+          "coherence_mode": "incoherent",
+          "coherence_strength": 0.9,
+          "sparse_additive_fraction": 0.0,
+          "sparse_additive_scale": 0.0
+        },
+        "structure": {
+          "mode": "none",
+          "strength": 0.0,
+          "secondary_strength": 0.0
+        },
+        "missingness_field": {
+          "mode": "random",
+          "concentration": 1.0,
+          "width": 0.15,
+          "row_index": null,
+          "col_index": null,
+          "value_dependence": 0.0
+        },
+        "mask_sampling": {
+          "observed_fraction": 0.35,
+          "exact_fraction": true,
+          "threshold": null,
+          "invert_scores": false
+        },
+        "split": {
+          "validation_fraction": 0.15,
+          "test_fraction": 0.15
+        },
+        "noise": {
+          "mode": "gaussian",
+          "std": 0.02,
+          "outlier_fraction": 0.0,
+          "outlier_scale": 0.0
+        }
+      }
+    }
+  ],
+  "base_scenario": null,
+  "base_scenario_ref": null,
+  "methods": [
+    {
+      "name": "soft_impute",
+      "label": "Soft-Impute",
+      "key": "soft",
+      "params": {
+        "max_iter": 80
+      },
+      "bindings": {
+        "rank": {
+          "path": "matrix.rank",
+          "scale": 1.0,
+          "offset": 0.0,
+          "cast": "int",
+          "minimum": null,
+          "maximum": null,
+          "round_digits": null
+        }
+      }
+    },
+    {
+      "name": "rgd",
+      "label": "RGD",
+      "key": "rgd",
+      "params": {
+        "max_iter": 120,
+        "init": "spectral"
+      },
+      "bindings": {
+        "rank": {
+          "path": "matrix.rank",
+          "scale": 1.0,
+          "offset": 0.0,
+          "cast": "int",
+          "minimum": null,
+          "maximum": null,
+          "round_digits": null
+        }
+      }
+    },
+    {
+      "name": "rgd_l2",
+      "label": "RGD + L2",
+      "key": "rgd_l2",
+      "params": {
+        "max_iter": 120,
+        "init": "spectral",
+        "l2_reg": 0.03
+      },
+      "bindings": {
+        "rank": {
+          "path": "matrix.rank",
+          "scale": 1.0,
+          "offset": 0.0,
+          "cast": "int",
+          "minimum": null,
+          "maximum": null,
+          "round_digits": null
+        }
+      }
+    }
+  ],
+  "sweeps": [],
+  "seeds": [
+    41,
+    42
+  ],
+  "output_dir": "research_outputs/manual_rank_study",
+  "aggregate_by": []
+}

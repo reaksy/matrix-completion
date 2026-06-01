@@ -1,0 +1,198 @@
+{
+  "name": "core_research_suite",
+  "description": "Набор однофакторных экспериментов от одного базового сценария.",
+  "tags": [
+    "demo",
+    "suite"
+  ],
+  "base_scenario": {
+    "name": "base_500x500_rank3",
+    "description": "Базовый сценарий: 500x500, rank=3, случайные пропуски, слабый шум.",
+    "tags": [
+      "base",
+      "demo"
+    ],
+    "scenario": {
+      "matrix": {
+        "m": 500,
+        "n": 500,
+        "rank": 3,
+        "factor_distribution": "gaussian",
+        "singular_value_profile": "linear",
+        "singular_scale": 1.0,
+        "coherence_mode": "incoherent",
+        "coherence_strength": 0.9,
+        "sparse_additive_fraction": 0.0,
+        "sparse_additive_scale": 0.0
+      },
+      "structure": {
+        "mode": "none",
+        "strength": 0.0,
+        "secondary_strength": 0.0
+      },
+      "missingness_field": {
+        "mode": "random",
+        "concentration": 1.0,
+        "width": 0.15,
+        "row_index": null,
+        "col_index": null,
+        "value_dependence": 0.0
+      },
+      "mask_sampling": {
+        "observed_fraction": 0.35,
+        "exact_fraction": true,
+        "threshold": null,
+        "invert_scores": false
+      },
+      "split": {
+        "validation_fraction": 0.15,
+        "test_fraction": 0.15
+      },
+      "noise": {
+        "mode": "gaussian",
+        "std": 0.02,
+        "outlier_fraction": 0.0,
+        "outlier_scale": 0.0
+      }
+    }
+  },
+  "base_scenario_ref": null,
+  "methods": [
+    {
+      "name": "soft_impute",
+      "label": "Soft-Impute",
+      "key": "soft",
+      "params": {
+        "max_iter": 60
+      },
+      "bindings": {
+        "rank": {
+          "path": "matrix.rank",
+          "scale": 1.0,
+          "offset": 0.0,
+          "cast": "int",
+          "minimum": null,
+          "maximum": null,
+          "round_digits": null
+        }
+      }
+    },
+    {
+      "name": "als",
+      "label": "ALS",
+      "key": "als",
+      "params": {
+        "max_iter": 60,
+        "init": "spectral",
+        "reg": 0.001
+      },
+      "bindings": {
+        "rank": {
+          "path": "matrix.rank",
+          "scale": 1.0,
+          "offset": 0.0,
+          "cast": "int",
+          "minimum": null,
+          "maximum": null,
+          "round_digits": null
+        }
+      }
+    },
+    {
+      "name": "compact_rgd",
+      "label": "Compact RGD",
+      "key": "compact_rgd",
+      "params": {
+        "max_iter": 80,
+        "init": "spectral"
+      },
+      "bindings": {
+        "rank": {
+          "path": "matrix.rank",
+          "scale": 1.0,
+          "offset": 0.0,
+          "cast": "int",
+          "minimum": null,
+          "maximum": null,
+          "round_digits": null
+        }
+      }
+    },
+    {
+      "name": "compact_rgd_l2",
+      "label": "Compact RGD + L2",
+      "key": "compact_rgd_l2",
+      "params": {
+        "max_iter": 80,
+        "init": "spectral",
+        "l2_reg": 0.03
+      },
+      "bindings": {
+        "rank": {
+          "path": "matrix.rank",
+          "scale": 1.0,
+          "offset": 0.0,
+          "cast": "int",
+          "minimum": null,
+          "maximum": null,
+          "round_digits": null
+        }
+      }
+    }
+  ],
+  "seeds": [
+    41
+  ],
+  "experiments": [
+    {
+      "name": "rank_sweep",
+      "description": "Меняем только истинный ранг. Значения строятся автоматически.",
+      "tags": [],
+      "vary_path": "matrix.rank",
+      "values": [],
+      "vary_alias": "rank",
+      "base_scenario": null,
+      "base_scenario_ref": null,
+      "methods": [],
+      "seeds": [
+        42
+      ],
+      "output_dir": "",
+      "aggregate_by": []
+    },
+    {
+      "name": "noise_sweep",
+      "description": "Меняем только уровень шума. Значения строятся автоматически.",
+      "tags": [],
+      "vary_path": "noise.std",
+      "values": [],
+      "vary_alias": "noise",
+      "base_scenario": null,
+      "base_scenario_ref": null,
+      "methods": [],
+      "seeds": [
+        42
+      ],
+      "output_dir": "",
+      "aggregate_by": []
+    },
+    {
+      "name": "missingness_sweep",
+      "description": "Меняем только тип пропусков.",
+      "tags": [],
+      "vary_path": "missingness_field.mode",
+      "values": [],
+      "vary_alias": "missingness",
+      "base_scenario": null,
+      "base_scenario_ref": null,
+      "methods": [],
+      "seeds": [
+        42
+      ],
+      "output_dir": "",
+      "aggregate_by": []
+    }
+  ],
+  "output_dir": "research_outputs/core_research_suite",
+  "aggregate_by": []
+}

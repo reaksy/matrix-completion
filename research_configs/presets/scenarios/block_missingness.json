@@ -1,0 +1,51 @@
+{
+  "name": "block_missingness",
+  "description": "Тот же базовый сценарий, но с блочными пропусками.",
+  "tags": [
+    "base",
+    "rank4"
+  ],
+  "scenario": {
+    "matrix": {
+      "m": 60,
+      "n": 60,
+      "rank": 4,
+      "factor_distribution": "gaussian",
+      "singular_value_profile": "linear",
+      "singular_scale": 1.0,
+      "coherence_mode": "incoherent",
+      "coherence_strength": 0.9,
+      "sparse_additive_fraction": 0.0,
+      "sparse_additive_scale": 0.0
+    },
+    "structure": {
+      "mode": "none",
+      "strength": 0.0,
+      "secondary_strength": 0.0
+    },
+    "missingness_field": {
+      "mode": "block",
+      "concentration": 1.0,
+      "width": 0.15,
+      "row_index": null,
+      "col_index": null,
+      "value_dependence": 0.0
+    },
+    "mask_sampling": {
+      "observed_fraction": 0.35,
+      "exact_fraction": true,
+      "threshold": null,
+      "invert_scores": false
+    },
+    "split": {
+      "validation_fraction": 0.15,
+      "test_fraction": 0.15
+    },
+    "noise": {
+      "mode": "gaussian",
+      "std": 0.02,
+      "outlier_fraction": 0.0,
+      "outlier_scale": 0.0
+    }
+  }
+}

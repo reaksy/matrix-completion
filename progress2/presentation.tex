@@ -1,0 +1,203 @@
+%----------------------------------------------------------------------------------------
+%    PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\usetheme{SimpleDarkBlue}
+
+\usepackage{hyperref}
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage[russianb]{babel}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{mathrsfs}
+
+\newcommand{\roundbrackets}[1]{\left({#1}\right)}
+\newcommand{\brackets}[1]{\left[{#1}\right]}
+\newcommand{\braces}[1]{\left\{{#1}\right\}}
+\newcommand{\anglebrackets}[1]{\left\langle{#1}\right\rangle}
+\newcommand{\lr}[1]{\left({#1}\right)}
+\newcommand{\lrq}[3]{\left[#1\right]_{#2}^{#3}}
+\newcommand{\set}[1]{\left\{#1\right\}}
+
+% Set of numbers
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+
+% Maths
+\newcommand{\betterlim}[2]{\lim\limits_{{#1}\to{#2}}}
+\newcommand{\bettersum}[2]{\sum\limits_{{#1}}^{{#2}}}
+\newcommand{\betteriff}{\Leftrightarrow}
+\newcommand{\isf}{\xrightarrow{\text{УСВ}}}
+\newcommand{\betterpmatrix}[1]{\begin{pmatrix} #1 \end{pmatrix}}
+\newcommand{\bettervmatrix}[1]{\begin{vmatrix} #1 \end{vmatrix}}
+\newcommand{\system}[1]{\begin{cases} #1 \end{cases}}
+\newcommand{\integral}[2]{\displaystyle\int\limits_{{#1}}^{{#2}}}
+\newcommand{\doubleintegral}[2]{\displaystyle\iint\limits_{\substack{#1 \\ #2}}}
+\newcommand{\tripleintegral}[3]{\displaystyle\iiint\limits_{\substack{#1 \\ #2 \\ #3}}}
+\newcommand{\ra}{\Rightarrow}
+\newcommand{\predel}[2]{\lim\limits_{#1 \to #2}}
+\newcommand{\summa}[2]{\sum\limits_{#1}^{#2}}
+\renewcommand{\vec}[1]{\left({#1}\right)^T}
+\newcommand{\degree}{^\circ}
+\renewcommand{\a}{&}
+\newcommand{\spec}[1]{\text{Spec}(#1)}
+\renewcommand{\span}[1]{\left\langle#1\right\rangle}
+\renewcommand{\ker}{\text{Ker }}
+\newcommand{\imag}{\text{Im }}
+\renewcommand{\t}{^{\perp}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\s}{^*}
+\newcommand{\norm}[1]{\left|\left|#1\right|\right|}
+\newcommand{\nln}[1]{\ln\lr{#1}}
+\newcommand{\abs}[1]{\left| #1 \right|}
+
+
+%----------------------------------------------------------------------------------------
+%    TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title{Геометрические методы на многоорбазии матриц фиксированного ранга для matrix completion}
+\subtitle{Прогресс по проекту}
+
+\author{Аляутдинов Карим, Исмаилов Магомед}
+
+\institute
+{
+    НИУ ВШЭ % Your institution for the title page
+}
+\date{\today} % Date, can be changed to a custom date
+
+%----------------------------------------------------------------------------------------
+%    PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\begin{frame}
+    % Print the title page as the first slide
+    \titlepage
+\end{frame}
+
+\begin{frame}{Overview}
+    % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+    \tableofcontents
+\end{frame}
+
+%------------------------------------------------
+\section{Тема}
+%------------------------------------------------
+
+\begin{frame}{Bullet Points}
+    \begin{itemize}
+        \item Lorem ipsum dolor sit amet, consectetur adipiscing elit
+        \item Aliquam blandit faucibus nisi, sit amet dapibus enim tempus eu
+        \item Nulla commodo, erat quis gravida posuere, elit lacus lobortis est, quis porttitor odio mauris at libero
+        \item Nam cursus est eget velit posuere pellentesque
+        \item Vestibulum faucibus velit a augue condimentum quis convallis nulla gravida
+    \end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Blocks of Highlighted Text}
+    In this slide, some important text will be \alert{highlighted} because it's important. Please, don't abuse it.
+
+    \begin{block}{Block}
+        Sample text
+    \end{block}
+
+    \begin{alertblock}{Alertblock}
+        Sample text in red box
+    \end{alertblock}
+
+    \begin{examples}
+        Sample text in green box. The title of the block is ``Examples".
+    \end{examples}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Multiple Columns}
+    \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
+
+        \column{.45\textwidth} % Left column and width
+        \textbf{Heading}
+        \begin{enumerate}
+            \item Statement
+            \item Explanation
+            \item Example
+        \end{enumerate}
+
+        \column{.45\textwidth} % Right column and width
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lectus nisl, ultricies in feugiat rutrum, porttitor sit amet augue. Aliquam ut tortor mauris. Sed volutpat ante purus, quis accumsan dolor.
+
+    \end{columns}
+\end{frame}
+
+%------------------------------------------------
+\section{Second Section}
+%------------------------------------------------
+
+\begin{frame}{Table}
+    \begin{table}
+        \begin{tabular}{l l l}
+            \toprule
+            \textbf{Treatments} & \textbf{Response 1} & \textbf{Response 2} \\
+            \midrule
+            Treatment 1         & 0.0003262           & 0.562               \\
+            Treatment 2         & 0.0015681           & 0.910               \\
+            Treatment 3         & 0.0009271           & 0.296               \\
+            \bottomrule
+        \end{tabular}
+        \caption{Table caption}
+    \end{table}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Theorem}
+    \begin{theorem}[Mass--energy equivalence]
+        $E = mc^2$
+    \end{theorem}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Figure}
+    Uncomment the code on this slide to include your own image from the same directory as the template .TeX file.
+    %\begin{figure}
+    %\includegraphics[width=0.8\linewidth]{test}
+    %\end{figure}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile] % Need to use the fragile option when verbatim is used in the slide
+    \frametitle{Citation}
+    An example of the \verb|\cite| command to cite within the presentation:\\~
+
+    This statement requires citation \cite{p1}.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{References}
+    \footnotesize
+    \bibliography{reference.bib}
+    \bibliographystyle{apalike}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+    \Huge{\centerline{\textbf{The End}}}
+\end{frame}
+
+%----------------------------------------------------------------------------------------
+
+\end{document}

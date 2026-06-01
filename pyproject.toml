@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "matrix-completion-research"
+version = "0.1.0"
+description = "Research tools for synthetic matrix completion experiments with Riemannian low-rank solvers."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+notebook = [
+    "pandas>=2.2",
+    "jupyter>=1.0",
+]
+
+[tool.setuptools]
+py-modules = [
+    "matrix_completion_methods",
+    "synthetic_api",
+    "synthetic_research_api",
+    "synthetic_study_api",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = [
+    "*.ipynb",
+    "arXiv-1504.05477v4",
+    "arXiv-1504.05477v4_ru",
+    "legacy",
+    "progress2",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = ["E402", "E501", "I001"]

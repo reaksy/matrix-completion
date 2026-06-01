@@ -1,0 +1,93 @@
+{
+  "name": "rank_sweep_research",
+  "description": "Перебор истинного ранга с привязкой ранга методов к рангу сценария.",
+  "tags": [
+    "synthetic",
+    "rank_sweep",
+    "research"
+  ],
+  "base_scenario": null,
+  "base_scenario_ref": "research_configs/presets/scenarios/base_60x60_rank4.json",
+  "methods": [
+    {
+      "name": "soft_impute",
+      "label": "Soft-Impute",
+      "key": "soft",
+      "params": {
+        "max_iter": 80
+      },
+      "bindings": {
+        "rank": {
+          "path": "matrix.rank",
+          "scale": 1.0,
+          "offset": 0.0,
+          "cast": "int",
+          "minimum": null,
+          "maximum": null,
+          "round_digits": null
+        }
+      }
+    },
+    {
+      "name": "rgd",
+      "label": "RGD",
+      "key": "rgd",
+      "params": {
+        "max_iter": 120,
+        "init": "spectral"
+      },
+      "bindings": {
+        "rank": {
+          "path": "matrix.rank",
+          "scale": 1.0,
+          "offset": 0.0,
+          "cast": "int",
+          "minimum": null,
+          "maximum": null,
+          "round_digits": null
+        }
+      }
+    },
+    {
+      "name": "rgd_l2",
+      "label": "RGD + L2",
+      "key": "rgd_l2",
+      "params": {
+        "max_iter": 120,
+        "init": "spectral",
+        "l2_reg": 0.03
+      },
+      "bindings": {
+        "rank": {
+          "path": "matrix.rank",
+          "scale": 1.0,
+          "offset": 0.0,
+          "cast": "int",
+          "minimum": null,
+          "maximum": null,
+          "round_digits": null
+        }
+      }
+    }
+  ],
+  "sweeps": [
+    {
+      "target": "scenario",
+      "path": "matrix.rank",
+      "values": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "alias": null,
+      "method_key": null
+    }
+  ],
+  "seeds": [
+    41,
+    42
+  ],
+  "output_dir": "research_outputs/rank_sweep_research",
+  "aggregate_by": []
+}
