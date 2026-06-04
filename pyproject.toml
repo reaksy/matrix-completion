@@ -19,7 +19,6 @@ dev = [
     "ruff>=0.6",
 ]
 notebook = [
-    "pandas>=2.2",
     "jupyter>=1.0",
 ]
 

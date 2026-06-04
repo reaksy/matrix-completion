@@ -1,9 +1,4 @@
-#!/usr/bin/env python3
-"""Численные методы для экспериментов по восстановлению матриц.
-
-В файле оставлены только переиспользуемые алгоритмы, которые нужны основному
-API. Старые benchmark-скрипты и CLI-слой сюда намеренно не входят.
-"""
+"""Методы восстановления матриц по частичным наблюдениям."""
 
 from __future__ import annotations
 
@@ -25,8 +20,6 @@ class SolverResult:
     iterations: int
     l2_reg: float = 0.0
     method_family: str = ""
-    selected_l2_reg: float | None = None
-    validation_rmse: float | None = None
 
 
 def fro_norm(X: Array) -> float:
@@ -487,17 +480,3 @@ def solve_soft_impute(
         l2_reg=0.0,
         method_family="soft_impute",
     )
-
-
-__all__ = [
-    "Array",
-    "SolverResult",
-    "masked_rmse",
-    "masked_mae",
-    "relative_fro_error",
-    "observed_objective",
-    "solve_riemannian_gradient_descent",
-    "solve_riemannian_gradient_descent_compact",
-    "solve_als",
-    "solve_soft_impute",
-]

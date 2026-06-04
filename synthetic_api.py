@@ -1,54 +1,14 @@
-#!/usr/bin/env python3
-"""Основной API для синтетических экспериментов по matrix completion.
-
-Модуль устроен как набор небольших конструкторов: сценарий, маска пропусков,
-наблюдения, методы, метрики и графики. Такой формат удобнее для ноутбука и
-исследовательских запусков, чем отдельный CLI-бенчмарк.
-
-Общая схема:
-    матрица -> структура -> поле пропусков -> маска наблюдений ->
-    train/validation/test -> шум -> методы -> метрики
-"""
+"""Генерация синтетических сценариев, запуск методов и расчет метрик."""
 
 from __future__ import annotations
 
 import copy
 import csv
-import itertools
-import math
-import os
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Sequence
+from typing import Any, Sequence
 
 import numpy as np
-
-os.environ.setdefault("MPLCONFIGDIR", "/private/tmp/matplotlib_config")
-os.environ.setdefault("XDG_CACHE_HOME", "/private/tmp/xdg_cache")
-
-
-def _running_inside_ipython() -> bool:
-    try:
-        from IPython import get_ipython  # type: ignore
-
-        return get_ipython() is not None
-    except Exception:
-        return False
-
-
-try:
-    import matplotlib
-
-    if not _running_inside_ipython():
-        matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-except ImportError:  # pragma: no cover
-    plt = None
-
-try:
-    import pandas as pd
-except ImportError:  # pragma: no cover
-    pd = None
 
 from matrix_completion_methods import (
     SolverResult,
@@ -181,10 +141,8 @@ VALID_METHODS = {
     "als",
     "rgd",
     "rgd_l2",
-    "rgd_l2_selected",
     "compact_rgd",
     "compact_rgd_l2",
-    "compact_l2_selected",
 }
 
 
@@ -244,149 +202,6 @@ def validate_scenario_config(config: ScenarioConfig) -> None:
         raise ValueError(f"noise.outlier_scale must be non-negative, got {config.noise.outlier_scale}.")
 
 
-def _require_plotting() -> None:
-    if plt is None:
-        raise RuntimeError(
-            "matplotlib недоступен в текущем Python-окружении. "
-            "Нужно открыть notebook в ядре, где установлен matplotlib."
-        )
-
-
-def _as_sortable(value: Any) -> tuple[int, float | str]:
-    try:
-        return (0, float(value))
-    except (TypeError, ValueError):
-        return (1, str(value))
-
-
-def _format_tick_value(value: float, sig_digits: int = 4) -> str:
-    if abs(value - round(value)) < 1e-9:
-        return str(int(round(value)))
-    return f"{value:.{sig_digits}g}"
-
-
-def _numeric_series_overlap(
-    grouped: dict[str, list[tuple[Any, float]]],
-) -> bool:
-    per_x: dict[float, list[float]] = {}
-    for points in grouped.values():
-        for value, metric in points:
-            x_value = float(value)
-            per_x.setdefault(x_value, []).append(float(metric))
-    for metrics in per_x.values():
-        seen: set[float] = set()
-        for metric in metrics:
-            rounded = round(metric, 12)
-            if rounded in seen:
-                return True
-            seen.add(rounded)
-    return False
-
-
-def _series_offsets(
-    count: int,
-    *,
-    reference_values: Sequence[float],
-) -> list[float]:
-    if count <= 1:
-        return [0.0]
-    unique_x = sorted(set(reference_values))
-    if len(unique_x) > 1:
-        min_gap = min(b - a for a, b in zip(unique_x, unique_x[1:], strict=False) if b > a)
-        base_offset = 0.12 * min_gap
-    else:
-        scale = abs(unique_x[0]) if unique_x else 1.0
-        base_offset = 0.03 * max(scale, 1.0)
-    center = 0.5 * (count - 1)
-    return [(index - center) * base_offset for index in range(count)]
-
-
-def _dedupe_values(seq: Sequence[float]) -> list[float]:
-    out: list[float] = []
-    for value in seq:
-        if value not in out:
-            out.append(value)
-    return out
-
-
-def _nearest_values_on_scale(
-    values: Sequence[float],
-    *,
-    max_ticks: int,
-    transform: Callable[[float], float],
-) -> list[float]:
-    unique_values = _dedupe_values(values)
-    if max_ticks <= 0 or len(unique_values) <= max_ticks:
-        return unique_values
-    if max_ticks == 1:
-        return [unique_values[0]]
-    if max_ticks == 2:
-        return [unique_values[0], unique_values[-1]]
-
-    transformed = [transform(value) for value in unique_values]
-    left = transformed[0]
-    right = transformed[-1]
-    chosen: list[float] = []
-    for index in range(max_ticks):
-        target = left + (right - left) * index / (max_ticks - 1)
-        nearest = min(
-            unique_values,
-            key=lambda value: (
-                abs(transform(value) - target),
-                abs(value - unique_values[0]),
-            ),
-        )
-        chosen.append(nearest)
-
-    chosen.extend([unique_values[0], unique_values[-1]])
-    return _dedupe_values(chosen)
-
-
-def _select_tick_values(
-    values: Sequence[float],
-    max_ticks: int,
-    *,
-    scale: str = "linear",
-) -> list[float]:
-    unique_values = _dedupe_values(values)
-    if max_ticks <= 0 or len(unique_values) <= max_ticks:
-        return unique_values
-    if max_ticks == 1:
-        return [unique_values[0]]
-    if max_ticks == 2:
-        return [unique_values[0], unique_values[-1]]
-
-    if scale == "log":
-        positive = [value for value in unique_values if value > 0]
-        if positive:
-            return _nearest_values_on_scale(
-                positive,
-                max_ticks=max_ticks,
-                transform=lambda value: math.log10(value),
-            )
-
-    if scale == "symlog":
-        zero_values = [value for value in unique_values if abs(value) < 1e-15]
-        positive = [value for value in unique_values if value > 0]
-        negative = [value for value in unique_values if value < 0]
-        if positive and not negative:
-            slots = max_ticks - (1 if zero_values else 0)
-            selected = _nearest_values_on_scale(
-                positive,
-                max_ticks=max(2, slots),
-                transform=lambda value: math.log10(value),
-            )
-            if zero_values:
-                selected = [0.0] + selected
-            return _dedupe_values(selected)
-
-    selected: list[float] = []
-    for index in range(max_ticks):
-        pos = round(index * (len(unique_values) - 1) / (max_ticks - 1))
-        selected.append(unique_values[pos])
-    return _dedupe_values(selected)
-
-
 def _draw_distribution(shape: tuple[int, int], distribution: str, rng: np.random.Generator) -> Array:
     if distribution == "gaussian":
         return rng.normal(size=shape)
@@ -402,7 +217,7 @@ def _orthonormalize_columns(Z: Array) -> Array:
     return Q[:, : Z.shape[1]]
 
 
-def _build_singular_values(rank: int, profile: str, scale: float) -> Array:
+def build_singular_values(rank: int, profile: str, scale: float) -> Array:
     if rank <= 0:
         return np.zeros(0)
     if profile == "linear":
@@ -440,7 +255,7 @@ def generate_base_matrix(config: MatrixConfig, rng: np.random.Generator) -> Arra
     if config.coherence_mode not in {"incoherent", "coherent_rows", "coherent_cols", "coherent_both"}:
         raise ValueError(f"Unknown coherence_mode: {config.coherence_mode}")
 
-    singular_values = _build_singular_values(rank, config.singular_value_profile, config.singular_scale)
+    singular_values = build_singular_values(rank, config.singular_value_profile, config.singular_scale)
     X = U @ np.diag(singular_values) @ V.T
 
     if config.sparse_additive_fraction > 0.0 and config.sparse_additive_scale > 0.0:
@@ -827,84 +642,6 @@ def run_compact_rgd_l2_method(scenario: Scenario, method: MethodConfig) -> Metho
     )
 
 
-def _select_l2_and_refit(
-    scenario: Scenario,
-    method: MethodConfig,
-    *,
-    compact: bool,
-) -> MethodResult:
-    rank = _resolve_rank(method, scenario)
-    init = _resolve_init(method)
-    l2_grid = list(method.params.get("l2_grid", [1e-3, 1e-2, 3e-2]))
-    max_iter = int(method.params.get("max_iter", 120 if compact else 140))
-
-    candidate_runs: list[tuple[float, float, SolverResult]] = []
-    for index, l2_value in enumerate(l2_grid):
-        if compact:
-            candidate = solve_riemannian_gradient_descent_compact(
-                scenario.Y_observed,
-                scenario.mask_split.fit_mask,
-                rank=rank,
-                rng=_scenario_rng(scenario, 501 + index),
-                init=init,
-                max_iter=max_iter,
-                l2_reg=float(l2_value),
-                method_name=f"candidate_{l2_value:.0e}",
-                method_family="compact_rgd_l2_candidate",
-            )
-        else:
-            candidate = solve_riemannian_gradient_descent(
-                scenario.Y_observed,
-                scenario.mask_split.fit_mask,
-                rank=rank,
-                rng=_scenario_rng(scenario, 601 + index),
-                init=init,
-                max_iter=max_iter,
-                l2_reg=float(l2_value),
-                method_name=f"candidate_{l2_value:.0e}",
-                method_family="rgd_l2_candidate",
-            )
-        validation_rmse = masked_rmse(candidate.X_hat, scenario.X_structured, scenario.mask_split.validation_mask)
-        candidate_runs.append((validation_rmse, float(l2_value), candidate))
-
-    best_validation_rmse, best_l2, _ = min(candidate_runs, key=lambda item: (item[0], item[1]))
-
-    if compact:
-        final = solve_riemannian_gradient_descent_compact(
-            scenario.Y_observed,
-            scenario.mask_split.train_mask,
-            rank=rank,
-            rng=_scenario_rng(scenario, 701),
-            init=init,
-            max_iter=max_iter,
-            l2_reg=best_l2,
-            method_name=method.label or method.name,
-            method_family="compact_l2_selected",
-        )
-    else:
-        final = solve_riemannian_gradient_descent(
-            scenario.Y_observed,
-            scenario.mask_split.train_mask,
-            rank=rank,
-            rng=_scenario_rng(scenario, 801),
-            init=init,
-            max_iter=max_iter,
-            l2_reg=best_l2,
-            method_name=method.label or method.name,
-            method_family="rgd_l2_selected",
-        )
-
-    return _solver_result_to_method_result(
-        method,
-        final,
-        metadata={
-            "assumed_rank": rank,
-            "selected_l2_reg": best_l2,
-            "selection_validation_rmse": best_validation_rmse,
-        },
-    )
-
-
 def run_method(scenario: Scenario, method: MethodConfig) -> MethodResult:
     if method.name == "soft_impute":
         return run_soft_impute_method(scenario, method)
@@ -914,14 +651,10 @@ def run_method(scenario: Scenario, method: MethodConfig) -> MethodResult:
         return run_rgd_method(scenario, method)
     if method.name == "rgd_l2":
         return run_rgd_l2_method(scenario, method)
-    if method.name == "rgd_l2_selected":
-        return _select_l2_and_refit(scenario, method, compact=False)
     if method.name == "compact_rgd":
         return run_compact_rgd_method(scenario, method)
     if method.name == "compact_rgd_l2":
         return run_compact_rgd_l2_method(scenario, method)
-    if method.name == "compact_l2_selected":
-        return _select_l2_and_refit(scenario, method, compact=True)
     raise ValueError(f"Unknown method: {method.name}")
 
 
@@ -960,8 +693,6 @@ def evaluate_method_result(scenario: Scenario, method_result: MethodResult) -> d
         "test_rmse": round(masked_rmse(method_result.X_hat, scenario.X_structured, scenario.mask_split.test_mask), 6),
         "test_mae": round(masked_mae(method_result.X_hat, scenario.X_structured, scenario.mask_split.test_mask), 6),
         "relative_fro_error": round(relative_fro_error(method_result.X_hat, scenario.X_structured), 6),
-        "selected_l2_reg": method_result.metadata.get("selected_l2_reg", ""),
-        "selection_validation_rmse": method_result.metadata.get("selection_validation_rmse", ""),
     }
     record.update(flatten_config(scenario.config))
     return record
@@ -1015,29 +746,11 @@ def apply_overrides(config: ScenarioConfig, overrides: dict[str, Any]) -> Scenar
     return clone
 
 
-def build_config_variants(
-    base_config: ScenarioConfig,
-    grid: dict[str, Sequence[Any]],
-) -> list[ScenarioConfig]:
-    if not grid:
-        return [copy.deepcopy(base_config)]
-    keys = list(grid.keys())
-    variants: list[ScenarioConfig] = []
-    for values in itertools.product(*(grid[key] for key in keys)):
-        overrides = {key: value for key, value in zip(keys, values, strict=True)}
-        variants.append(apply_overrides(base_config, overrides))
-    return variants
-
-
-def one_factor_sweep(
-    base_config: ScenarioConfig,
-    parameter_path: str,
-    values: Sequence[Any],
-    methods: Sequence[MethodConfig],
-    seeds: Sequence[int],
-) -> list[ExperimentResult]:
-    configs = [apply_overrides(base_config, {parameter_path: value}) for value in values]
-    return run_many_experiments(configs, methods, seeds)
+def _as_sortable(value: Any) -> tuple[int, float | str]:
+    try:
+        return (0, float(value))
+    except (TypeError, ValueError):
+        return (1, str(value))
 
 
 def aggregate_records(
@@ -1070,12 +783,6 @@ def aggregate_records(
     return sorted(output, key=lambda row: tuple(_as_sortable(row[key]) for key in by))
 
 
-def to_dataframe(rows: Sequence[dict[str, Any]]):
-    if pd is None:
-        return list(rows)
-    return pd.DataFrame(rows)
-
-
 def write_csv(rows: Sequence[dict[str, Any]], path: str | Path) -> None:
     rows = list(rows)
     if not rows:
@@ -1093,269 +800,3 @@ def write_csv(rows: Sequence[dict[str, Any]], path: str | Path) -> None:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
-
-
-def write_latex_table(
-    rows: Sequence[dict[str, Any]],
-    columns: Sequence[tuple[str, str]],
-    caption: str,
-    label: str,
-    path: str | Path,
-) -> None:
-    rows = list(rows)
-    if not rows:
-        return
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    lines = [
-        r"\begin{table}[H]",
-        r"\centering",
-        r"\small",
-        rf"\caption{{{caption}}}",
-        rf"\label{{{label}}}",
-        rf"\begin{{tabular}}{{{'l' + 'r' * (len(columns) - 1)}}}",
-        r"\toprule",
-        " & ".join(title for _, title in columns) + r" \\",
-        r"\midrule",
-    ]
-    for row in rows:
-        values = [str(row[key]).replace("_", r"\_") for key, _ in columns]
-        lines.append(" & ".join(values) + r" \\")
-    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
-    path.write_text("\n".join(lines), encoding="utf-8")
-
-
-def singular_values(X: Array) -> Array:
-    return np.linalg.svd(X, compute_uv=False)
-
-
-def plot_matrix(X: Array, title: str = "", cmap: str = "viridis", save_path: str | Path | None = None):
-    _require_plotting()
-    fig, ax = plt.subplots(figsize=(5, 4))
-    im = ax.imshow(X, aspect="auto", cmap=cmap)
-    ax.set_title(title)
-    fig.colorbar(im, ax=ax, shrink=0.8)
-    fig.tight_layout()
-    if save_path is not None:
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(save_path, dpi=180)
-    if _running_inside_ipython():
-        plt.show()
-    return fig, ax
-
-
-def plot_mask(mask: Array, title: str = "", save_path: str | Path | None = None):
-    return plot_matrix(mask.astype(float), title=title, cmap="gray_r", save_path=save_path)
-
-
-def plot_singular_values(
-    X: Array,
-    title: str = "",
-    log_scale: bool = False,
-    save_path: str | Path | None = None,
-):
-    _require_plotting()
-    values = singular_values(X)
-    plotted_values = np.maximum(values, np.finfo(float).tiny) if log_scale else values
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.plot(range(1, len(values) + 1), plotted_values, marker="o", linewidth=2)
-    ax.set_title(title or ("Singular values (log scale)" if log_scale else "Singular values"))
-    ax.set_xlabel("Index")
-    ax.set_ylabel("Singular value")
-    if log_scale:
-        ax.set_yscale("log")
-    ax.grid(alpha=0.3)
-    fig.tight_layout()
-    if save_path is not None:
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(save_path, dpi=180)
-    if _running_inside_ipython():
-        plt.show()
-    return fig, ax
-
-
-def plot_metric(
-    rows: Sequence[dict[str, Any]],
-    *,
-    x: str,
-    y: str,
-    hue: str = "method",
-    title: str = "",
-    xlabel: str | None = None,
-    ylabel: str | None = None,
-    x_tick_rotation: float = 0.0,
-    x_tick_sig_digits: int = 4,
-    max_xticks: int | None = None,
-    x_scale: str = "linear",
-    symlog_linthresh: float | None = None,
-    separate_series_on_overlap: bool = True,
-    figsize: tuple[float, float] = (8.4, 4.8),
-    save_path: str | Path | None = None,
-):
-    _require_plotting()
-    grouped: dict[str, list[tuple[Any, float]]] = {}
-    for row in rows:
-        grouped.setdefault(str(row[hue]), []).append((row[x], float(row[y])))
-
-    all_x = [value for values in grouped.values() for value, _ in values]
-    numeric_x = True
-    for value in all_x:
-        try:
-            float(value)
-        except (TypeError, ValueError):
-            numeric_x = False
-            break
-
-    fig, ax = plt.subplots(figsize=figsize)
-    if numeric_x:
-        unique_x = sorted({float(value) for value in all_x})
-        overlap = separate_series_on_overlap and _numeric_series_overlap(grouped)
-        offsets = _series_offsets(len(grouped), reference_values=unique_x) if overlap else [0.0] * len(grouped)
-        markers = ["o", "s", "^", "D", "v", "P", "X", "*"]
-        for series_index, (label, points) in enumerate(grouped.items()):
-            numeric_points = [(float(value), metric) for value, metric in points]
-            numeric_points.sort(key=lambda item: item[0])
-            offset = offsets[series_index]
-            ax.plot(
-                [item[0] + offset for item in numeric_points],
-                [item[1] for item in numeric_points],
-                marker=markers[series_index % len(markers)],
-                linewidth=2,
-                label=label,
-            )
-        tick_values = (
-            _select_tick_values(unique_x, max_xticks, scale=x_scale)
-            if max_xticks is not None
-            else unique_x
-        )
-        if x_scale == "log":
-            ax.set_xscale("log")
-        elif x_scale == "symlog":
-            positive_x = [value for value in unique_x if value > 0]
-            min_positive = min(positive_x) if positive_x else 1e-6
-            ax.set_xscale("symlog", linthresh=symlog_linthresh or min_positive)
-        ax.set_xticks(tick_values)
-        ax.set_xticklabels(
-            [_format_tick_value(value, sig_digits=x_tick_sig_digits) for value in tick_values],
-            rotation=x_tick_rotation,
-        )
-        ax.margins(x=0.03)
-        ax.minorticks_off()
-    else:
-        categories = sorted({str(value) for value in all_x}, key=_as_sortable)
-        index_map = {category: idx for idx, category in enumerate(categories)}
-        markers = ["o", "s", "^", "D", "v", "P", "X", "*"]
-        for series_index, (label, points) in enumerate(grouped.items()):
-            cat_points = [(str(value), metric) for value, metric in points]
-            cat_points.sort(key=lambda item: _as_sortable(item[0]))
-            ax.plot(
-                [index_map[item[0]] for item in cat_points],
-                [item[1] for item in cat_points],
-                marker=markers[series_index % len(markers)],
-                linewidth=2,
-                label=label,
-            )
-        category_positions = list(range(len(categories)))
-        if max_xticks is not None:
-            shown_positions = _select_tick_values(category_positions, max_xticks)
-            shown_labels = [categories[int(pos)] for pos in shown_positions]
-        else:
-            shown_positions = category_positions
-            shown_labels = categories
-        ax.set_xticks(shown_positions)
-        ax.set_xticklabels(shown_labels, rotation=x_tick_rotation or 20)
-
-    ax.set_title(title or f"{y} vs {x}")
-    ax.set_xlabel(xlabel or x)
-    ax.set_ylabel(ylabel or y)
-    ax.grid(alpha=0.3)
-    ax.legend()
-    fig.tight_layout()
-    if save_path is not None:
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(save_path, dpi=180)
-    if _running_inside_ipython():
-        plt.show()
-    return fig, ax
-
-
-def plot_histories(
-    method_results: Sequence[MethodResult],
-    metric_key: str = "train_objective",
-    title: str = "",
-    save_path: str | Path | None = None,
-):
-    _require_plotting()
-    fig, ax = plt.subplots(figsize=(7, 4.5))
-    for result in method_results:
-        xs = []
-        ys = []
-        for idx, item in enumerate(result.history, start=1):
-            if metric_key in item:
-                xs.append(idx)
-                ys.append(float(item[metric_key]))
-        if xs:
-            ax.plot(xs, ys, linewidth=2, label=result.label)
-    ax.set_title(title or metric_key)
-    ax.set_xlabel("Iteration")
-    ax.set_ylabel(metric_key)
-    ax.grid(alpha=0.3)
-    ax.legend()
-    fig.tight_layout()
-    if save_path is not None:
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(save_path, dpi=180)
-    if _running_inside_ipython():
-        plt.show()
-    return fig, ax
-
-
-__all__ = [
-    "ExperimentResult",
-    "MaskSamplingConfig",
-    "MaskSplit",
-    "MatrixConfig",
-    "MethodConfig",
-    "MethodResult",
-    "MissingnessFieldConfig",
-    "NoiseConfig",
-    "Scenario",
-    "ScenarioConfig",
-    "SplitConfig",
-    "StructureConfig",
-    "aggregate_records",
-    "apply_overrides",
-    "apply_structure",
-    "assemble_scenario",
-    "build_config_variants",
-    "build_missingness_field",
-    "build_observed_matrix",
-    "collect_records",
-    "evaluate_method_result",
-    "generate_base_matrix",
-    "make_method",
-    "make_rng",
-    "one_factor_sweep",
-    "package_scenario",
-    "plot_histories",
-    "plot_mask",
-    "plot_matrix",
-    "plot_singular_values",
-    "plot_metric",
-    "run_many_experiments",
-    "run_experiment_on_scenario",
-    "run_method",
-    "run_methods",
-    "run_single_experiment",
-    "sample_observed_mask",
-    "singular_values",
-    "split_observed_mask",
-    "to_dataframe",
-    "validate_scenario_config",
-    "write_csv",
-    "write_latex_table",
-]

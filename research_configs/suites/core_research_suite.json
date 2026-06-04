@@ -1,9 +1,9 @@
 {
   "name": "core_research_suite",
   "description": "Набор однофакторных экспериментов от одного базового сценария.",
-  "tags": [
-    "demo",
-    "suite"
+  "output_dir": "research_outputs/core_research_suite",
+  "seeds": [
+    41
   ],
   "base_scenario": {
     "name": "base_500x500_rank3",
@@ -56,143 +56,66 @@
       }
     }
   },
-  "base_scenario_ref": null,
   "methods": [
     {
       "name": "soft_impute",
       "label": "Soft-Impute",
-      "key": "soft",
       "params": {
         "max_iter": 60
       },
-      "bindings": {
-        "rank": {
-          "path": "matrix.rank",
-          "scale": 1.0,
-          "offset": 0.0,
-          "cast": "int",
-          "minimum": null,
-          "maximum": null,
-          "round_digits": null
-        }
-      }
+      "use_true_rank": true
     },
     {
       "name": "als",
       "label": "ALS",
-      "key": "als",
       "params": {
         "max_iter": 60,
         "init": "spectral",
         "reg": 0.001
       },
-      "bindings": {
-        "rank": {
-          "path": "matrix.rank",
-          "scale": 1.0,
-          "offset": 0.0,
-          "cast": "int",
-          "minimum": null,
-          "maximum": null,
-          "round_digits": null
-        }
-      }
+      "use_true_rank": true
     },
     {
       "name": "compact_rgd",
       "label": "Compact RGD",
-      "key": "compact_rgd",
       "params": {
         "max_iter": 80,
         "init": "spectral"
       },
-      "bindings": {
-        "rank": {
-          "path": "matrix.rank",
-          "scale": 1.0,
-          "offset": 0.0,
-          "cast": "int",
-          "minimum": null,
-          "maximum": null,
-          "round_digits": null
-        }
-      }
+      "use_true_rank": true
     },
     {
       "name": "compact_rgd_l2",
       "label": "Compact RGD + L2",
-      "key": "compact_rgd_l2",
       "params": {
         "max_iter": 80,
         "init": "spectral",
         "l2_reg": 0.03
       },
-      "bindings": {
-        "rank": {
-          "path": "matrix.rank",
-          "scale": 1.0,
-          "offset": 0.0,
-          "cast": "int",
-          "minimum": null,
-          "maximum": null,
-          "round_digits": null
-        }
-      }
+      "use_true_rank": true
     }
   ],
-  "seeds": [
-    41
-  ],
-  "experiments": [
+  "sweeps": [
     {
       "name": "rank_sweep",
-      "description": "Меняем только истинный ранг. Значения строятся автоматически.",
-      "tags": [],
-      "vary_path": "matrix.rank",
+      "path": "matrix.rank",
       "values": [],
-      "vary_alias": "rank",
-      "base_scenario": null,
-      "base_scenario_ref": null,
-      "methods": [],
-      "seeds": [
-        42
-      ],
-      "output_dir": "",
-      "aggregate_by": []
+      "alias": "rank",
+      "title": "Меняем только истинный ранг. Значения строятся автоматически."
     },
     {
       "name": "noise_sweep",
-      "description": "Меняем только уровень шума. Значения строятся автоматически.",
-      "tags": [],
-      "vary_path": "noise.std",
+      "path": "noise.std",
       "values": [],
-      "vary_alias": "noise",
-      "base_scenario": null,
-      "base_scenario_ref": null,
-      "methods": [],
-      "seeds": [
-        42
-      ],
-      "output_dir": "",
-      "aggregate_by": []
+      "alias": "noise",
+      "title": "Меняем только уровень шума. Значения строятся автоматически."
     },
     {
       "name": "missingness_sweep",
-      "description": "Меняем только тип пропусков.",
-      "tags": [],
-      "vary_path": "missingness_field.mode",
+      "path": "missingness_field.mode",
       "values": [],
-      "vary_alias": "missingness",
-      "base_scenario": null,
-      "base_scenario_ref": null,
-      "methods": [],
-      "seeds": [
-        42
-      ],
-      "output_dir": "",
-      "aggregate_by": []
+      "alias": "missingness",
+      "title": "Меняем только тип пропусков."
     }
-  ],
-  "output_dir": "research_outputs/core_research_suite",
-  "aggregate_by": []
+  ]
 }
